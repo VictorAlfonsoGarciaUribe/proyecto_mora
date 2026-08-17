@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 1. Message Broker (Gestor de colas en memoria)
+  redis:
+    image: redis:alpine
+    container_name: mora_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # 2. Servidor Web de la API (FastAPI)
+  api:
+    build: .
+    container_name: mora_api
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_BROKER_URL=redis://redis:6379/0
+      - REDIS_RESULT_BACKEND=redis://redis:6379/0
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - redis
+    restart: always
+
+  # 3. Procesador de Tareas Asíncronas e IA (Celery Worker)
+  worker:
+    build: .
+    container_name: mora_worker
+    command: celery -A core.celery_app.celery_app worker --pool=solo --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_BROKER_URL=redis://redis:6379/0
+      - REDIS_RESULT_BACKEND=redis://redis:6379/0
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - redis
+    restart: always
