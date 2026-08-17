@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     VERSION: str = "0.2.0"
     REDIS_BROKER_URL: str = "redis://localhost:6379/0"
     REDIS_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    GOOGLE_API_KEY: str
 
     # Configuración para leer archivos .env automáticamente
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
