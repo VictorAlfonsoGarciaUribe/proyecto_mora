@@ -9,7 +9,26 @@ services:
       - "6379:6379"
     restart: always
 
-  # 2. Servidor Web de la API (FastAPI)
+  # 2. Base de Datos Relacional y Vectorial (PostgreSQL + pgvector)
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: mora_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-saas_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-saas_db}
+    ports:
+      - "5433:5432"  # Mapeado a 5433 externo para evitar choques con un Postgres local
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saas_admin} -d ${POSTGRES_DB:-saas_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. Servidor Web de la API (FastAPI)
   api:
     build: .
     container_name: mora_api
@@ -21,12 +40,16 @@ services:
     environment:
       - REDIS_BROKER_URL=redis://redis:6379/0
       - REDIS_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-saas_admin}:${POSTGRES_PASSWORD:-secure_password_2026}@postgres:5432/${POSTGRES_DB:-saas_db}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     restart: always
 
-  # 3. Procesador de Tareas Asíncronas e IA (Celery Worker)
+  # 4. Procesador de Tareas Asíncronas e IA (Celery Worker)
   worker:
     build: .
     container_name: mora_worker
@@ -36,7 +59,14 @@ services:
     environment:
       - REDIS_BROKER_URL=redis://redis:6379/0
       - REDIS_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-saas_admin}:${POSTGRES_PASSWORD:-secure_password_2026}@postgres:5432/${POSTGRES_DB:-saas_db}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     restart: always
+
+volumes:
+  postgres_data:

@@ -1,19 +1,31 @@
-annotated-doc==0.0.5
-annotated-types==0.8.0
-anyio==4.14.2
-click==8.4.2
-colorama==0.4.6
+# Base FastAPI y Servidor
 fastapi==0.141.1
-h11==0.16.0
-idna==3.18
-iniconfig==2.3.0
-packaging==26.3
-pluggy==1.6.0
+uvicorn==0.52.3
 pydantic==2.13.4
 pydantic_core==2.46.4
-Pygments==2.20.0
-pytest==9.1.1
 starlette==1.6.0
-typing-inspection==0.4.3
-typing_extensions==4.16.0
-uvicorn==0.52.3
+annotated-types==0.8.0
+anyio==4.14.2
+
+# Tareas Asíncronas y Broker (Worker)
+celery>=5.3.6
+redis>=5.0.0
+
+# Base de Datos Relacional y Vectorial (PostgreSQL + pgvector)
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+pgvector>=0.2.0
+alembic>=1.13.0
+pydantic-settings>=2.0.0
+
+# Integración con IA
+langgraph>=0.0.20
+langchain-core>=0.1.0
+langchain-google-genai>=1.0.0
+google-generativeai>=0.4.0
+
+# Herramientas de Desarrollo y Testing
+pytest==9.1.1
+click==8.4.2
+colorama==0.4.6
+Pygments==2.20.0
