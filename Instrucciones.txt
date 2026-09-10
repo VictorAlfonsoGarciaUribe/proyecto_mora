@@ -1,0 +1,48 @@
+abre cmd en la carpeta del proyecto 
+________________________________________________________
+Inicia entorno virtual 
+
+venv\Scripts\activate
+________________________________________________________
+Abre servicios de docker descktop 
+________________________________________________________
+
+Levantar los servicios de Docker en segundo plano:
+
+DOS
+docker compose up -d
+
+Verificar contenedores activos
+Para confirmar que la base de datos PostgreSQL con la extensión pgvector ya está corriendo correctamente, ejecuta:
+
+DOS
+docker ps
+
+________________________________________________________
+
+Destruye la infraestructura actual y sus volúmenes corruptos:
+
+DOS
+docker compose down -v
+
+
+________________________________________________________
+
+Construir físicamente la tabla en la base de datos virgen:
+
+DOS
+docker compose run --rm api alembic upgrade head
+
+
+________________________________________________________
+Ejecutar el seeder de datos masivos:
+
+DOS
+docker compose run --rm api env PYTHONPATH=. python core/seeder.py
+Una vez finalice, verifica que la persistencia sea correcta ejecutando la consulta de control:
+
+DOS
+docker compose exec postgres psql -U saas_admin -d saas_db -c "SELECT count(*) FROM products;"
+Confírmame si la consola te devuelve los 10,000 registros para dar por cerrado este hito de infraestructura.
+
+
