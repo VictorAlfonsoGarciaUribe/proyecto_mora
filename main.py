@@ -1,20 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, status
-from sqlalchemy import text
+
 from schemas.produccion import ReporteProduccion
 from workers.tasks import procesar_reporte_pesado
-from core.database import engine, Base
-import core.models  # Registra los modelos (Tenant, User, Product) en la metadata del ORM
+from core.database import engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Evento de arranque (Startup): Inicialización de BD
-    async with engine.begin() as conn:
-        # 1. Habilitar la extensión pgvector en PostgreSQL para embeddings de IA
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-        # 2. Crear tablas si no existen en la base de datos
-        await conn.run_sync(Base.metadata.create_all)
-    
+    # Evento de arranque (Startup): Limpio y pasivo
     yield
     
     # Evento de apagado (Shutdown): Liberar pool de conexiones
@@ -36,7 +29,7 @@ def health_check():
 def registrar_produccion(payload: ReporteProduccion):
     """
     Recibe el reporte, lo valida estrictamente con Pydantic, 
-    lo encola en Redis mediante Celery y responde inmediatamente (202 Accepted).
+    lo encola en Redis mediante Celery y responde inmediatamente.
     """
     datos_dict = payload.model_dump()
     tarea = procesar_reporte_pesado.delay(reporte_id=999, datos=datos_dict)
